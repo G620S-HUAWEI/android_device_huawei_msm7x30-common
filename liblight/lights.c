@@ -29,7 +29,7 @@
 #include <hardware/lights.h>
 
 #include "private/android_filesystem_config.h"
- #include <sys/wait.h>
+#include <sys/wait.h>
 
 static pthread_once_t g_init = PTHREAD_ONCE_INIT;
 static pthread_mutex_t g_lock = PTHREAD_MUTEX_INITIALIZER;
@@ -70,7 +70,7 @@ static pthread_t blink;
 static struct led_config g_leds[3]; // For battery, notifications, and attention.
 static int g_cur_led = -1;          // Presently showing LED of the above.
 
-void *led_blink(void *arg){
+void *led_blink(){
     while(led_link_status){
         write_int(RED_LED_FILE, par.RED);
         write_int(BLUE_LED_FILE, par.BLUE);
@@ -149,7 +149,9 @@ static int set_light_backlight(struct light_device_t *dev,
 {
     int err = 0;
     int brightness = rgb_to_brightness(state);
-
+    if(!dev) {
+        return -1;
+    }
     pthread_mutex_lock(&g_lock);
     err = write_int(PANEL_FILE, brightness);
 
@@ -174,9 +176,9 @@ set_light_buttons(struct light_device_t* dev,
 static int close_lights(struct light_device_t *dev)
 {
     ALOGV("close_light is called");
-    if (dev)
+    if (dev) {
         free(dev);
-
+    }
     return 0;
 }
 
@@ -300,18 +302,27 @@ static int set_light_leds_battery(struct light_device_t *dev,
             struct light_state_t const *state)
 {
     return set_light_leds(state, 0);
+    if(!dev) {
+        return -1;
+    }
 }
 
 static int set_light_leds_notifications(struct light_device_t *dev,
             struct light_state_t const *state)
 {
     return set_light_leds(state, 1);
+    if(!dev) {
+        return -1;
+    }
 }
 
 static int set_light_leds_attention(struct light_device_t *dev,
             struct light_state_t const *state)
 {
     struct light_state_t fixed;
+    if(!dev) {
+        return -1;
+    }
 
     memcpy(&fixed, state, sizeof(fixed));
 
